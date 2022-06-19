@@ -2,10 +2,14 @@ import secrets
 import json
 import base64
 
-from params_default import DEFAULT_CHARSET, UNUSED_CHARS
+from params import DEFAULT_CHARSET, UNUSED_CHARS
 
 
 max_shift = len(DEFAULT_CHARSET)
+
+def set_max_shift(new):
+    global max_shift
+    max_shift = new
 
 def my_base64_encoder(str_input):
     return base64.b64encode(bytes(str_input, 'utf-8')).decode('utf-8')
@@ -62,7 +66,7 @@ def random_between(min, max):
 
 def gen_noise(charset):
     noise = ''
-    for i in range(random_between(100, 1000)):
+    for i in range(random_between(15, 75)):
         noise += secrets.choice(charset)
     return noise
 
@@ -79,7 +83,7 @@ def make_charset_and_null_chars(charset, unused_chars):
 
     return shuffle(charset), null_chars
 
-def gen_key(nbytes = 800):
+def gen_key(nbytes = 500):
     charset, null_chars = make_charset_and_null_chars(DEFAULT_CHARSET, UNUSED_CHARS)
     key_obj = {
         'charset': charset,
@@ -130,7 +134,7 @@ def encode(char, charset, int_subkey):
     if result > max_shift:
         result %= max_shift
 
-    return charset[result-1]
+    return charset[result - 1]
 
 def decode(char, charset, int_subkey):
     try:
@@ -145,14 +149,13 @@ def decode(char, charset, int_subkey):
     return charset[result - 1]
 
 def randomly_confuse_the_cryptanalyst(null_chars):
-    if secrets.randbelow(100) < 10:
-        return secrets.choice(null_chars)
+    if secrets.randbelow(100) < 40:
+        return '' if len(null_chars) == 0 else secrets.choice(null_chars)
     else:
         return ''
 
 def encrypt_str(plaintext, key_object):
-    global max_shift
-    max_shift = len(key_object['charset'])
+    set_max_shift(len(key_object['charset']))
 
     plaintext = gen_noise(key_object['charset']) + 'BEGINREALMESSAGE' + plaintext + 'ENDREALMESSAGE' + gen_noise(key_object['charset'])
     keys = modified_collatz_sequence(int(key_object['key'], 16), len(plaintext))
@@ -164,8 +167,7 @@ def encrypt_str(plaintext, key_object):
     return format_message(unformated_ciphertext)
 
 def decrypt_str(formated_ciphertext, key_object):
-    global max_shift
-    max_shift = len(key_object['charset'])
+    set_max_shift(len(key_object['charset']))
     
     ciphertext = remove_null_chars(unformat_message(formated_ciphertext), key_object['null_chars'])
     keys = modified_collatz_sequence(int(key_object['key'], 16), len(ciphertext))
