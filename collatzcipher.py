@@ -75,19 +75,20 @@ def randomly_split(str_input):
     shuffled = shuffle(str_input)
     s = secrets.randbelow(len(shuffled))
 
-    return shuffled[:s], shuffled[s:]
+    return shuffled[:s], shuffled[-1], shuffled[s:len(shuffled)-1]
 
 def make_charset_and_null_chars(charset, unused_chars):
-    to_add_to_charset, null_chars = randomly_split(unused_chars)
+    to_add_to_charset, split_char, null_chars = randomly_split(unused_chars)
     charset += to_add_to_charset
 
-    return shuffle(charset), null_chars
+    return shuffle(charset), split_char, null_chars
 
 def gen_key(nbytes = 500):
-    charset, null_chars = make_charset_and_null_chars(DEFAULT_CHARSET, UNUSED_CHARS)
+    charset, split_char, null_chars = make_charset_and_null_chars(DEFAULT_CHARSET, UNUSED_CHARS)
     key_obj = {
         'charset': charset,
         'key': secrets.token_hex(nbytes),
+        'split_char': split_char,
         'null_chars': null_chars
     }
 
@@ -124,7 +125,10 @@ def remove_null_chars(ciphertext, null_chars):
     
     return ciphertext
 
-def encode(char, charset, int_subkey):
+def encode(char, charset, int_subkey, split_char):
+    if char == split_char:
+        return split_char
+
     try:
         result = charset.index(char) + 1
     except ValueError:
@@ -136,7 +140,10 @@ def encode(char, charset, int_subkey):
 
     return charset[result - 1]
 
-def decode(char, charset, int_subkey):
+def decode(char, charset, int_subkey, split_char):
+    if char == split_char:
+        return split_char
+    
     try:
         result = charset.index(char) + 1
     except ValueError:
@@ -157,12 +164,12 @@ def randomly_confuse_the_cryptanalyst(null_chars):
 def encrypt_str(plaintext, key_object):
     set_max_shift(len(key_object['charset']))
 
-    plaintext = gen_noise(key_object['charset']) + 'BEGINREALMESSAGE' + plaintext + 'ENDREALMESSAGE' + gen_noise(key_object['charset'])
+    plaintext = gen_noise(key_object['charset']) + key_object['split_char'] + plaintext + key_object['split_char'] + gen_noise(key_object['charset'])
     keys = modified_collatz_sequence(int(key_object['key'], 16), len(plaintext))
     unformated_ciphertext = ''
 
     for i in range(len(plaintext)):
-        unformated_ciphertext += (encode(plaintext[i], key_object['charset'], keys[i]) + randomly_confuse_the_cryptanalyst(key_object['null_chars']))
+        unformated_ciphertext += (encode(plaintext[i], key_object['charset'], keys[i], key_object['split_char']) + randomly_confuse_the_cryptanalyst(key_object['null_chars']))
 
     return format_message(unformated_ciphertext)
 
@@ -174,9 +181,9 @@ def decrypt_str(formated_ciphertext, key_object):
     plaintext = ''
 
     for i in range(len(ciphertext)):
-        plaintext += decode(ciphertext[i], key_object['charset'], keys[i])
+        plaintext += decode(ciphertext[i], key_object['charset'], keys[i], key_object['split_char'])
 
     try:
-        return plaintext.split('BEGINREALMESSAGE')[1].split('ENDREALMESSAGE')[0]
+        return plaintext.split(key_object['split_char'])[1]
     except Exception:
         return plaintext

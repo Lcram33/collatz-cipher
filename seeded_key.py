@@ -23,19 +23,20 @@ def pseudo_randomly_split(str_input):
     shuffled = pseudo_random_shuffle(str_input)
     s = random.randint(0,len(shuffled)-1)
 
-    return shuffled[:s], shuffled[s:]
+    return shuffled[:s], shuffled[-1], shuffled[s:len(shuffled)-1]
 
 def pseudo_random_make_charset_and_null_chars(charset, unused_chars):
-    to_add_to_charset, null_chars = pseudo_randomly_split(unused_chars)
+    to_add_to_charset, split_char, null_chars = pseudo_randomly_split(unused_chars)
     charset += to_add_to_charset
 
-    return pseudo_random_shuffle(charset), null_chars
+    return pseudo_random_shuffle(charset), split_char, null_chars
 
-def gen_key_with_seed(phrase_seed, nbytes = 800):
-    charset, null_chars = pseudo_random_make_charset_and_null_chars(DEFAULT_CHARSET, UNUSED_CHARS)
+def gen_key_with_seed(nbytes = 800):
+    charset, split_char, null_chars = pseudo_random_make_charset_and_null_chars(DEFAULT_CHARSET, UNUSED_CHARS)
     key_obj = {
         'charset': charset,
         'key': hex(random.randint(int('1'+(2*nbytes-1)*'0',16), int(2*nbytes*'f',16)))[2:],
+        'split_char': split_char,
         'null_chars': null_chars
     }
 
@@ -46,15 +47,23 @@ wordlist = load_wordlist('wordlist.json')
 
 number_of_words = 12
 sep = ' '
-phrase_seed = new_passphrase(wordlist, number_of_words, sep)
+phrase_seed = "atonable decent visiting daringly backyard aloft backrest connected reseller gratitude detail direness" #for testing, uncomment next line to generate one
+#phrase_seed = new_passphrase(wordlist, number_of_words, sep)
 
 print("Your seed phrase is the following, please DO take note of it, DON'T share it with anyone unless you want them to have your key :")
 print(phrase_seed)
 
 random.seed(phrase_seed)
 
-key = gen_key_with_seed(phrase_seed)
+key = gen_key_with_seed()
 str_key = format_key(key)
 print(str_key)
 
-print("Here is the fingerprint (sha256) of you key : " + sha256_string(str_key))
+print("Here is the fingerprint (sha256) of you key : " + sha256_string(str_key)) #with the example provided, should be 036685d786ce55870dd895af76de6bda48f57ccc788d241251d0c14bfc9b8b5c
+
+lazy_commenting_for_testing_only_you_should_avoid_to_print_directly_your_key = """
+print()
+print()
+print("what the key looks like :")
+print(key)
+"""
