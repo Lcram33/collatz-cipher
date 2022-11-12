@@ -18,7 +18,7 @@ def my_base64_decoder(str_input):
     return base64.b64decode(bytes(str_input, 'utf-8')).decode('utf-8')
 
 def align(str_input, k):
-    str_output = ''
+    str_output = ""
     for i in range(0, len(str_input), k):
         str_output += str_input[i:i+k] + '\n'
     
@@ -65,7 +65,7 @@ def random_between(min, max):
     return rand
 
 def gen_noise(charset):
-    noise = ''
+    noise = ""
     for i in range(random_between(15, 75)):
         noise += secrets.choice(charset)
     return noise
@@ -149,7 +149,7 @@ def decode(char, charset, int_subkey, split_char):
     except ValueError:
         print(f"Missing char in chars var : {char} (ord : {ord(char)})")
 
-    result = result - int_subkey % max_shift
+    result = result - int_subkey
     if result < 0:
         result += max_shift
 
@@ -166,7 +166,7 @@ def encrypt_str(plaintext, key_object):
 
     plaintext = gen_noise(key_object['charset']) + key_object['split_char'] + plaintext + key_object['split_char'] + gen_noise(key_object['charset'])
     keys = modified_collatz_sequence(int(key_object['key'], 16), len(plaintext))
-    unformated_ciphertext = ''
+    unformated_ciphertext = ""
 
     for i in range(len(plaintext)):
         unformated_ciphertext += (encode(plaintext[i], key_object['charset'], keys[i], key_object['split_char']) + randomly_confuse_the_cryptanalyst(key_object['null_chars']))
@@ -178,7 +178,7 @@ def decrypt_str(formated_ciphertext, key_object):
     
     ciphertext = remove_null_chars(unformat_message(formated_ciphertext), key_object['null_chars'])
     keys = modified_collatz_sequence(int(key_object['key'], 16), len(ciphertext))
-    plaintext = ''
+    plaintext = ""
 
     for i in range(len(ciphertext)):
         plaintext += decode(ciphertext[i], key_object['charset'], keys[i], key_object['split_char'])
