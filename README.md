@@ -42,16 +42,18 @@
 
 <img src="images/warning.png" width="90" height="90">
 
-I don't provide any warranty that this cipher is in any way reliable.
+<b>
+I do not provide any warranty that this cipher is in any way reliable.
 <br>
-DON'T USE FOR CRITICAL DATA !
+DO NOT USE FOR CRITICAL DATA !
+</b>
 <br>
 No research was made on it so far. Your welcome to contribute in any way !
 
 
 ### Break me !
 
-In <i>challenge.py</i>, you will find a message encrypted with an unknown key. If you manage to find the original message, it would be a pleasure to know how you did it ! See the contact section.
+In <i>challenge/challenge.py</i>, you will find a message encrypted with an unknown key. If you manage to find the original message, it would be a pleasure to know how you did it ! See the contact section.
 
 
 ### Built With
@@ -108,14 +110,12 @@ The number of possible keys is, approximately :
 Where :
 * K is the number of possible keys with nbytes, e.g. K100 = fff...f (200 times) - 100...0 (1, and 0 199 times)
 * C is the number of chars in the charset (not including the null chars, so this part may be slightly bigger)
-* u is the number of unused chars.
+* u is the number of unused chars. This part comes [from here](https://math.stackexchange.com/questions/3340723/how-many-ways-to-partition-n-elements-into-two-nonempty-subsets) and we do not count the split char.
 
-With the configuration in test.py :
-
-<img src="images/eq1_1.png">
+With the configuration in test.py, I get 10^485 (an equivalent of 1612 bits).
 
 
-### Number of possible encrypted message with the message and key
+### Number of possible encrypted message with the same message and key
 
 It should be :
 
@@ -123,23 +123,23 @@ It should be :
 
 Where C is the number of chars in the default charset.
 
-With the one provided by default :
-
-<img src="images/eq2_1.png">
+With the one provided by default, I get 10^159.
 
 
 ## Security considerations
 
 <img src="images/shield.png" width="90" height="90">
 
-As said before, no expert have audited my code and concept. I just made this for fun as an amateur. However, here are some security consediration. Again, any correction is welcome !
+As said before, no expert have audited my code and concept. I just made this for fun as an amateur. However, here are some security consediration. Again, any correction or material to add is welcome !
 
 
 ### Frenquency analysis
 
 Each character is swapped to another one with a different indice. This, plus the null chars, defeat frequency analysis, even to figure out which language is used.
 
-The coincidence rate (calculated with [another tool of mine](https://github.com/Lcram33/frequency_analysis)) looks to tend to 0.01, while it is around :
+The coincidence rate (calculated with [another tool of mine](https://github.com/Lcram33/frequency_analysis)) looks to tend to 0.01, no matter French or English.
+
+It is around :
 * 0.0778 for French
 * 0.0762 for German
 * 0.0738 for Italian
@@ -149,7 +149,9 @@ The coincidence rate (calculated with [another tool of mine](https://github.com/
 
 ### Brute forcing the key
 
-As seen above, there are 10^413 possible keys with nbytes = 100. With nbytes = 1,000 it increases to 10^2589.
+As seen above, there are 10^485 possible keys with nbytes = 100. With nbytes = 1,000 it increases to 10^2653.
+
+Brute forcing is not possible in acceptable time with our present knowledge and computer power.
 
 
 <!-- GETTING STARTED -->
