@@ -4,6 +4,14 @@ from collatzcipher import format_key
 import random
 import hashlib
 
+def print_fewer_lines(str_input):
+    lines = str_input.split('\n')
+    if len(lines) > 7:
+        splitted = lines[:3] + [f"[skipped {len(lines)-6} lines]"] + lines[-3:]
+        print('\n'.join(splitted))
+    else:
+        print(str_input)
+
 def sha256_string(my_string):
     return hashlib.sha256(my_string.encode('utf-8')).hexdigest()
 
@@ -76,6 +84,6 @@ def test_seeded_key():
 
     key = gen_key_with_seed()
     str_key = format_key(key)
-    print(str_key)
+    print_fewer_lines(str_key)
 
     print("Here is the fingerprint (sha256) of you key : " + sha256_string(str_key)) #with the example provided, should be 9a316fa17e8b8734fe9c27cf2031fde784e6fad9e837270761ae4b505a75bff8

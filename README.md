@@ -45,7 +45,7 @@
 <b>
 I do not provide any warranty that this cipher is in any way reliable.
 <br>
-DO NOT USE FOR CRITICAL DATA !
+DO NOT USE WITH CRITICAL DATA !
 </b>
 <br>
 No research was made on it so far. Your welcome to contribute in any way !
@@ -54,6 +54,8 @@ No research was made on it so far. Your welcome to contribute in any way !
 ### Break me !
 
 In <i>challenge/challenge.py</i>, you will find a message encrypted with an unknown key. If you manage to find the original message, it would be a pleasure to know how you did it ! See the contact section.
+
+Please note however that the charset changed. See <i>challenge/params-challenge.py</i> for more details.
 
 
 ### Built With
@@ -112,7 +114,7 @@ Where :
 * C is the number of chars in the charset (not including the null chars, so this part may be slightly bigger)
 * u is the number of unused chars. This part comes [from here](https://math.stackexchange.com/questions/3340723/how-many-ways-to-partition-n-elements-into-two-nonempty-subsets) and we do not count the split char.
 
-With the configuration in test.py, I get 10^485 (an equivalent of 1612 bits).
+With the current configuration in <i>test.py</i> and <i>params.py</i>, I get 10^1200 (an equivalent of 3987 bits).
 
 
 ### Number of possible encrypted message with the same message and key

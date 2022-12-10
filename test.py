@@ -3,6 +3,7 @@
 from collatzcipher import *
 from seeded_key import *
 from math import log
+from seeded_key import print_fewer_lines
 
 
 def fact(n):
@@ -47,7 +48,7 @@ str_key = format_key(key)
 key = to_key_object(str_key)
 
 print("The key is : ")
-print(str_key)
+print_fewer_lines(str_key)
 print()
 
 
@@ -55,18 +56,18 @@ cipher = encrypt_str(message, key)
 deciphered = decrypt_str(cipher, key)
 
 print(f"Encrypted message is :")
-print(cipher)
+print_fewer_lines(cipher)
 print()
 
 print(f"Decrypted message is :")
-print(deciphered)
+print_fewer_lines(deciphered)
 print(f"Match with original message ? {'YES' if deciphered == message else 'NO'}")
 
 
 print()
 print()
 print("what the enciphered message looks like :")
-print(unformat_message(cipher))
+print_fewer_lines(unformat_message(cipher))
 
 print()
 print()

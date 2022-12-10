@@ -53,11 +53,15 @@ excluded = [
     0x218D,
     0x218E,
     0x218F,
+    0x1F0B0,
+    0x1F0C0,
+    0x1F0D0,
+    0x1F0AF
 ] + [int("05C" + x,16) for x in "89ABCDEF"] + [int("05E" + x,16) for x in "BCDEF"] + [int("05F" + x,16) for x in "56789ABCDEF"]
 
 boundaries = [
     (0x0020, 0x007E),
-    (0x00A0, 0x00FF),
+    (0x00A1, 0x00FF),
     (0x0100, 0x017F),
     (0x0180, 0x024F),
     (0x1E00, 0x1EFF),
@@ -69,7 +73,11 @@ boundaries = [
     (0x07B0, 0x07B1),
     (0x20A0, 0x20AF),
     (0x20B0, 0x20BF),
-    (0x2440, 0x2445)
+    (0x2440, 0x2445),
+    (0x1FBC0, 0x1FBCA),
+    (0x1FBF0, 0x1FBF9),
+    (0x1F090, 0x1F093),
+    (0x1FA50, 0x1FA53)
 ]
 
 hex_range = list(str(x) for x in range(10)) + list("ABCDEF")
@@ -83,12 +91,12 @@ for x in [y for y in hex_range if y not in ['1', '2']]:
 for x in [y for y in hex_range if y not in ['D', '1']]:
     boundaries.append((int("06" + x + "0",16), int("06" + x + "F",16)))
 
-for x in range(5):
-    boundaries.append((int("07" + str(x) + "0",16), int("07" + str(x) + "F",16)))
-    boundaries.append((int("08" + str(x) + "0",16), int("08" + str(x) + "F",16)))
+for x in [str(y) for y in range(5)]:
+    boundaries.append((int("07" + x + "0",16), int("07" + str(x) + "F",16)))
+    boundaries.append((int("08" + x + "0",16), int("08" + str(x) + "F",16)))
 
 for x in "89A":
-    boundaries.append((int("07" + str(x) + "0",16), int("07" + str(x) + "F",16)))
+    boundaries.append((int("07" + x + "0",16), int("07" + x + "F",16)))
 
 #really long to do so... Skipped to end
 
@@ -96,7 +104,32 @@ for w in "123":
     for x in hex_range:
         boundaries.append((int("2" + w + x + "0",16), int("2" + w + x + "F",16)))
 
+for x in hex_range[6:]:
+    boundaries.append((int("24" + x + "0",16), int("24" + x + "F",16)))
+
+for x in hex_range:
+    boundaries.append((int("25" + x + "0",16), int("25" + x + "F",16)))
+
+for x in hex_range:
+    boundaries.append((int("26" + x + "0",16), int("26" + x + "F",16)))
+
+for x in hex_range[:-4]:
+    boundaries.append((int("1FB" + x + "0",16), int("1FB" + x + "F",16)))
+
+for x in hex_range[:-4]:
+    boundaries.append((int("27" + x + "0",16), int("27" + x + "F",16)))
+
+for x in [str(y) for y in range(7)]:
+    boundaries.append((int("1F7" + x + "0",16), int("1F7" + x + "F",16)))
+
+for x in [str(y) for y in range(3,8+1)] + list("ABCD"):
+    boundaries.append((int("1F0" + x + "0",16), int("1F0" + x + "F",16)))
+
+for x in [str(y) for y in range(5)]:
+    boundaries.append((int("1FA" + x + "0",16), int("1FA" + x + "F",16)))
 
 
+
+ALMOST_ALL_UNICODE = ""
 for bounds in boundaries:
-    print(u''.join(chr(x) for x in range(bounds[0],bounds[1]+1) if x not in excluded))
+    ALMOST_ALL_UNICODE += ''.join(chr(x) for x in range(bounds[0],bounds[1]+1) if x not in excluded)
