@@ -3,13 +3,12 @@
 from collatzcipher import *
 from seeded_key import *
 from math import log
-from seeded_key import print_fewer_lines
 
 
 def fact(n):
     return 1 if n == 0 else n * fact(n - 1)
 
-nbytes = 100 #WARNING : testing only for readability of the key (you should set a higher value ! Looks decent in terms of speed until ~1000 on a modern computer.)
+nbytes = 1000 #WARNING : testing only for readability of the key (you should set a higher value ! Looks decent in terms of speed until ~1000 on a modern computer.)
 
 number_of_hex_keys = int(nbytes * 2 * 'f', 16) - int('1' + (nbytes * 2 - 1) * '0', 16)
 number_of_unused_chars_spliting_possibilities = 2 ** (len(UNUSED_CHARS) - 2) - 1 #we don't count the split char.
@@ -23,7 +22,7 @@ A bit of math !
 
 The number of possible keys ({nbytes} bits for the token_hex and the current charset & unused chars) should be around (feel free to correct if you spot an error) :
 10^{round(log(number_of_possible_keys, 10))}, an equivalent of {round(log(number_of_possible_keys, 2))} bits.
-I estimate that there are 10^{round(log(2 * sum(len(DEFAULT_CHARSET) ** k for k in range(15, 75)), 10))} encrypted message with the same message and key.
+I estimate that there are 10^{round(log(2 * sum(len(DEFAULT_CHARSET) ** k for k in range(15, 75)), 10))} encrypted messages with the same message and key.
 See readme for more details.
 """
 

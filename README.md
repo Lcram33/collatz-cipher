@@ -125,6 +125,8 @@ It should be :
 
 Where C is the number of chars in the default charset.
 
+Again, we do not include the null chars, so the result is really bigger.
+
 With the one provided by default, I get 10^159.
 
 
@@ -151,7 +153,7 @@ It is around :
 
 ### Brute forcing the key
 
-As seen above, there are 10^485 possible keys with nbytes = 100. With nbytes = 1,000 it increases to 10^2653.
+As seen above, there are 10^1200 possible keys with nbytes = 100. With nbytes = 1,000 it increases to 10^3368.
 
 Brute forcing is not possible in acceptable time with our present knowledge and computer power.
 
