@@ -1,3 +1,5 @@
+#!/bin/python3
+
 from collatzcipher import *
 from seeded_key import *
 from math import log
