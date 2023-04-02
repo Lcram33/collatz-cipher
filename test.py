@@ -35,8 +35,9 @@ def test_seeded_key():
     print("Generated key :")
     print_fewer_lines(str_key)
 
-    # with the provided passphrase, should be 3c5084525df83f0d757848605468ee428da575a349d89c029a60646c9667f583.
-    print(f"Here is the fingerprint (sha256) of you key : {fgp}. Re-checking : {fgp == hash_fingerprint(str_key)}")
+    # with the provided passphrase, should be :
+    supposed_fgp = "52560d7d7d9324b26e00e2e266c0b72d2f7362da1350ead3df97ba0f4db07125"
+    print(f"Here is the fingerprint (sha256) of you key : {fgp}. Re-checking : {fgp == hash_fingerprint(str_key) and fgp == supposed_fgp}")
 
 
 def fact(n):
@@ -47,8 +48,11 @@ nbytes = 100 #WARNING : testing only for readability of the key (you should set 
 number_of_hex_keys = int(nbytes * 2 * 'f', 16) - int('1' + (nbytes * 2 - 1) * '0', 16)
 number_of_unused_chars_spliting_possibilities = 2 ** (len(UNUSED_CHARS) - 2) - 1 #we don't count the split char.
 charset_shuffle_possibilities = fact(max_shift)
-number_of_alphabets = len(collatz_sequence(int('1' + (nbytes * 2 - 1) * '0', 16)))
 number_of_possible_keys = charset_shuffle_possibilities * number_of_hex_keys * number_of_unused_chars_spliting_possibilities
+
+number_of_alphabets = len(collatz_sequence(int('1' + (nbytes * 2 - 1) * '0', 16)))
+
+number_of_messages = 2 * sum(len(DEFAULT_CHARSET) ** k for k in range(MAX_NOISE_LENGHT))
 
 
 calculus = f"""
@@ -56,7 +60,7 @@ A bit of math !
 
 The number of possible keys ({nbytes} bits for the token_hex and the current charset & unused chars) should be around (feel free to correct if you spot an error) :
 10^{round(log(number_of_possible_keys, 10))}, an equivalent of {round(log(number_of_possible_keys, 2))} bits.
-I estimate that there are 10^{round(log(2 * sum(len(DEFAULT_CHARSET) ** k for k in range(15, 75)), 10))} encrypted messages with the same message and key.
+I estimate that there are 10^{round(log(number_of_messages, 10))} encrypted messages with the same message and key.
 Also, there should be {number_of_alphabets} alphabets (this is a polyalphabetic cipher).
 See readme for more details.
 """

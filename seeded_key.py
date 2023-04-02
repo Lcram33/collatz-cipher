@@ -5,7 +5,7 @@ import random
 import hashlib
 
 
-HASHING_ITERATIONS = 512000
+HASHING_ITERATIONS = 600000
 
 
 def sha256_string(my_string):
@@ -60,6 +60,7 @@ def pseudo_randomly_split(str_input):
 def pseudo_random_make_charset_and_null_chars(charset, unused_chars):
     to_add_to_charset, split_char, null_chars = pseudo_randomly_split(unused_chars)
     charset += to_add_to_charset
+    charset += split_char
 
     return pseudo_random_shuffle(charset), split_char, null_chars
 

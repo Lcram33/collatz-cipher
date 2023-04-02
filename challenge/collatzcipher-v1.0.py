@@ -1,3 +1,8 @@
+# This program was used for the challenge.
+# Use this one and NOT collatzcipher.py (was updated since !!)
+# Also make sure to use params-challenge.py instead of params.py
+# To be sure, you can rely on this commit (first one with the challenge) : https://github.com/Lcram33/collatz-cipher/commit/3d06dfa3d013d09b85a2fcd71d35c69610811db5
+
 import secrets
 import json
 import base64
@@ -5,15 +10,11 @@ import base64
 from params import DEFAULT_CHARSET, UNUSED_CHARS
 
 
-MAX_NOISE_LENGHT = 200
-confusing_threshold = 40 # in x % of the cases. Changes at each message.
-
 max_shift = len(DEFAULT_CHARSET)
 
 def set_max_shift(new):
     global max_shift
     max_shift = new
-
 
 def my_base64_encoder(str_input):
     return base64.b64encode(bytes(str_input, 'utf-8')).decode('utf-8')
@@ -27,6 +28,7 @@ def align(str_input, k):
         str_output += str_input[i:i+k] + '\n'
     
     return str_output
+
 
 def format_key(key_object):
     converted = my_base64_encoder(json.dumps(key_object))
@@ -65,14 +67,14 @@ def random_between(min, max):
     rand = secrets.randbelow(max+1)
     while rand < min:
         rand = secrets.randbelow(max+1)
-    
     return rand
 
-def gen_noise(charset, split_char):
-    new_charset = list(charset)
-    if split_char in charset: new_charset.remove(split_char) # so we do not get the split char ! Else the message is not deciphered.
+def gen_noise(charset):
+    noise = ""
+    for i in range(random_between(15, 75)):
+        noise += secrets.choice(charset)
+    return noise
 
-    return ''.join(secrets.choice(new_charset) for i in range(secrets.randbelow(MAX_NOISE_LENGHT)))
 
 def randomly_split(str_input):
     shuffled = shuffle(str_input)
@@ -83,7 +85,6 @@ def randomly_split(str_input):
 def make_charset_and_null_chars(charset, unused_chars):
     to_add_to_charset, split_char, null_chars = randomly_split(unused_chars)
     charset += to_add_to_charset
-    charset += split_char
 
     return shuffle(charset), split_char, null_chars
 
@@ -120,7 +121,6 @@ def modified_collatz_sequence(int_key, size):
     output = [x % max_shift for x in seq if not x & 1]
     if len(output) < size:
         output = (size // len(output) + 1) * output
-    
     return output[0:size]
 
 
@@ -131,10 +131,13 @@ def remove_null_chars(ciphertext, null_chars):
     return ciphertext
 
 def encode(char, charset, int_subkey, split_char):
+    if char == split_char:
+        return split_char
+
     try:
         result = charset.index(char) + 1
     except ValueError:
-        print("Missing char in charset : " + char)
+        print("Missing char in chars var : " + char)
 
     result += int_subkey
     if result > max_shift:
@@ -143,10 +146,13 @@ def encode(char, charset, int_subkey, split_char):
     return charset[result - 1]
 
 def decode(char, charset, int_subkey, split_char):
+    if char == split_char:
+        return split_char
+    
     try:
         result = charset.index(char) + 1
     except ValueError:
-        print(f"Missing char in charset : {char} (ord : {ord(char)})")
+        print(f"Missing char in chars var : {char} (ord : {ord(char)})")
 
     result = result - int_subkey
     if result < 0:
@@ -155,33 +161,27 @@ def decode(char, charset, int_subkey, split_char):
     return charset[result - 1]
 
 def randomly_confuse_the_cryptanalyst(null_chars):
-    if secrets.randbelow(100) < confusing_threshold:
+    if secrets.randbelow(100) < 40:
         return '' if len(null_chars) == 0 else secrets.choice(null_chars)
     else:
         return ''
 
-def encrypt_str(plaintext, key_object, armor = True):
-    global confusing_threshold
-    confusing_threshold = random_between(1, 100)
-
+def encrypt_str(plaintext, key_object):
     set_max_shift(len(key_object['charset']))
 
-    plaintext = gen_noise(key_object['charset'], key_object['split_char']) + key_object['split_char'] + plaintext.replace(key_object['split_char'], '') + key_object['split_char'] + gen_noise(key_object['charset'], key_object['split_char'])
+    plaintext = gen_noise(key_object['charset']) + key_object['split_char'] + plaintext + key_object['split_char'] + gen_noise(key_object['charset'])
     keys = modified_collatz_sequence(int(key_object['key'], 16), len(plaintext))
     unformated_ciphertext = ""
 
     for i in range(len(plaintext)):
         unformated_ciphertext += (encode(plaintext[i], key_object['charset'], keys[i], key_object['split_char']) + randomly_confuse_the_cryptanalyst(key_object['null_chars']))
 
-    return format_message(unformated_ciphertext) if armor else unformated_ciphertext
+    return format_message(unformated_ciphertext)
 
-def decrypt_str(ciphertext, key_object, armor = True):
+def decrypt_str(formated_ciphertext, key_object):
     set_max_shift(len(key_object['charset']))
     
-    if armor:
-        ciphertext = unformat_message(ciphertext)
-
-    ciphertext = remove_null_chars(ciphertext, key_object['null_chars'])
+    ciphertext = remove_null_chars(unformat_message(formated_ciphertext), key_object['null_chars'])
     keys = modified_collatz_sequence(int(key_object['key'], 16), len(ciphertext))
     plaintext = ""
 
@@ -191,5 +191,4 @@ def decrypt_str(ciphertext, key_object, armor = True):
     try:
         return plaintext.split(key_object['split_char'])[1]
     except Exception:
-        print("SPLIT ERROR")
         return plaintext

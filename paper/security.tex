@@ -1,0 +1,28 @@
+\section{Security considerations}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.175]{shield}
+\end{figure}
+
+\subsection{Frenquency analysis}
+
+Each character is swapped to another one with a different indice. This, plus the null chars, defeat frequency analysis, even to figure out which language is used.
+\newline
+The coincidence rate (calculated with \href{https://github.com/Lcram33/frequency_analysis}{another tool of mine})) looks to tend to 0.01, no matter French or English.
+\newline
+\newline
+It is around :
+\begin{itemize}
+    \item 0.0778 for French
+    \item 0.0762 for German
+    \item 0.0738 for Italian
+    \item 0.0667 for English
+    \item 0.0385 for randomly generated text
+\end{itemize}
+
+\subsection{Brute forcing the key}
+
+As seen above, there are $10^{1200}$ possible keys with nbytes = 100. With nbytes = 1,000 it increases to $10^{3368}$.
+\newline
+Brute forcing is not possible in acceptable time with our present knowledge and computer power.

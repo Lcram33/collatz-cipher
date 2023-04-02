@@ -51,11 +51,20 @@ DO NOT USE WITH CRITICAL DATA !
 No research was made on it so far. Your welcome to contribute in any way !
 
 
+## Technical part (how it works) & security considerations
+
+<img src="images/semigear.png" width="90" height="90"> <img src="images/shield.png" width="90" height="90">
+
+<i>These parts have been moved to the unofficial paper. See pdf document in the repo.</i>
+
+
 ### Break me !
+
+<img src="images/bulb.png" width="90" height="90">
 
 In <i>challenge/challenge.py</i>, you will find a message encrypted with an unknown key. If you manage to find the original message, it would be a pleasure to know how you did it ! See the contact section.
 
-Please note however that the charset changed. See <i>challenge/params-challenge.py</i> for more details.
+Please note however that the project changed since. See <i>challenge/params-challenge.py</i> and <i>challenge/collatzcipher-v1.0.py</i> for more details.
 
 
 ### Built With
@@ -63,20 +72,6 @@ Please note however that the charset changed. See <i>challenge/params-challenge.
 <a href="https://www.python.org">
   <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width=60/>
 </a>
-
-
-## Technical part (how it works)
-
-<i>This part was moved to the unofficial paper. See pdf document in the repo.</i>
-
-
-## Security considerations
-
-<img src="images/shield.png" width="90" height="90">
-
-As said before, no expert have audited my code and concept. I just made this for fun as an amateur. However, here are some security consediration. Again, any correction or material to add is welcome !
-
-<i>This part was moved to the unofficial paper. See pdf document in the repo.</i>
 
 
 <!-- GETTING STARTED -->
@@ -104,31 +99,59 @@ python3 (should come with your favorite distro)
    cd collatz-cipher
    ```
 
-3. Start the program
+3. Test that everything works as expected (and you meet all depedencies)
    ```sh
-   python3 test.py
+   ./test.py && cd test_samples/ && ./test_all.sh && cd ..
+   ```
+
+4. See the help of the command line tool
+   ```sh
+   ./main.py --help
    ```
 
 
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-A command line program is still in progress. For the moment, the cipher is usable as shown in <i>test.py</i>.
+The program is to be runned as follow :
+   ```sh
+   ./main.py <command> <required args> <optional args>
+   ```
+
+Use :
+   ```sh
+   ./main.py <command> --help
+   ```
+
+to get the arguments and a description of what a command does.
+
+Commands:
+* list
+* gen
+* seededkey
+* enc
+* dec
+* export
+* import
+* delete
 
 
-### Other programs in this repo
+## Other programs in this repo
 
 * <i>seeded_key.py</i> allows to create keys using a random passphrase, allowing an easier key sharing and key recovery.
 * <i>secure_pwd_gen_api.py</i> comes from [one of my other projects](https://github.com/Lcram33/strong_password_generator). It can be used to generate passwords and passphrases for cryptographic use.
 * <i>test_randomness.py</i> is to test how "randomly" are the shiftings distributed.
+* <i>unicode_list.py</i> was used to produce the latest params.py file.
 
 
 <!-- ROADMAP -->
-## Roadmap
-<h3>
-- 🗹 Base program <br>
-- ☐ Command line interface (work in progress)
-</h3>
+## Changelog
+
+### v1.1
+- Added null char to the charset, meaning it is now encrypted. To avoid any problem in decryption, it is removed from the initial message before encryption. <br>
+- Randomized "confusing threshold" (prevalence of useless chars). <br>
+- Randomized noise at the begining and the end of the message. <br>
+- First version of paper.
 
 See the [open issues](https://github.com/lcram33/collatz-cipher/issues) for a full list of proposed features (and known issues).
 
@@ -169,6 +192,11 @@ Project Link: [https://github.com/lcram33/collatz-cipher](https://github.com/lcr
 <a href="https://www.flaticon.com/free-icons/warning" title="warning icons">Warning icons created by Freepik - Flaticon</a>
 <br>
 <a href="https://www.flaticon.com/free-icons/safe" title="safe icons">Safe icons created by Assia Benkerroum  - Flaticon</a>
+<br>
+<a href="https://www.flaticon.com/free-icons/technology" title="technology icon">Technology icons created by Smashicons - Flaticon</a>
+<br>
+<a href="https://www.flaticon.com/free-icons/idea" title="technology icon">Idea icons created by Good Ware - Flaticon</a>
+
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->

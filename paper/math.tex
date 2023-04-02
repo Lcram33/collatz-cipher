@@ -1,0 +1,34 @@
+\section{Let's do some math}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.65]{pi}
+\end{figure}
+
+\subsection{Number of possible keys}
+    
+Let's note $\Psi(n,C,u)$ the number of possible of keys. Then :
+\begin{large}
+\begin{align}
+    \Psi(n,C,u) = K_n \times C! \times (2^{u-2}-1)
+\end{align}
+\end{large}
+With :
+\begin{itemize}
+    \item $K_{n}$ the number of possible keys with n "bytes", e.g. $K_{100}$ = fff...f (200 times) - 100...0 (1, and 0 199 times)
+    \item $C$ the number of chars in the charset (not including the null chars, so this part may be slightly bigger)
+    \item $u$ is the number of unused chars. This part comes from 
+                \href{https://math.stackexchange.com/questions/3340723/how-many-ways-to-partition-n-elements-into-two-nonempty-subsets}{here} 
+          and we do not count the split char
+    
+\end{itemize}
+
+\subsection{Number of possible encrypted message with the same message and key}
+
+Let's note $\mathcal{M}(C)$ the number of possible of keys. Then :
+\begin{large}
+\begin{align}
+    \mathcal{M}(C) = 2 \sum_{k=0}^{m}{C^k} 
+\end{align}
+\end{large}
+With, again, $C$ the number of chars in the charset, and $m$ the upper bound.

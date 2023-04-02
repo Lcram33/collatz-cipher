@@ -1,0 +1,89 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{setspace}
+\usepackage[margin=1.75cm]{geometry}
+\usepackage{subcaption}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{float}
+
+\graphicspath{ {../images/} }
+\setcounter{secnumdepth}{0}
+
+
+\begin{document}
+
+\title{\huge{Collatz Cipher (unofficial) paper}}
+
+\author{Marc Lecointre}
+
+\date{\today}
+
+\maketitle
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.225]{logo}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.18]{warning}
+\end{figure}
+
+I do not provide any warranty that this cipher is in any way reliable.
+DO NOT USE WITH CRITICAL DATA !
+\newline
+This is document is not an official research paper, but rather a technical documentation (easier in \LaTeX !). You are welcome to 
+contribute in any way !
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.18]{bulb}
+\end{figure}
+
+Work in progress. Stay tuned ! (check the date of the document to see if you are up-to-date). Please open an issue or contact me directly, 
+should you have any suggestion.
+
+\newblock
+
+
+\begin{abstract}
+A polyalphabetic cipher that derivate a key from Hasse's algorithm. Noise and randomness were added for more fun. Works only on text. 
+However, any file can de encrypted by converting binary stream to base64 text. This increases the size of the encrypted file.
+\end{abstract}
+
+\newpage
+\tableofcontents
+\newpage
+
+
+\include{introduction}
+\include{howitworks}
+\include{security}
+\include{math}
+
+
+\section{Bibliography}
+
+\href{https://en.wikipedia.org/wiki/Collatz_conjecture}{Collatz conjecture - Wikipedia}
+
+
+\section{Icons credits}
+
+\href{https://www.flaticon.com/free-icons/caesar-cipher}{Caesar cipher icons created by Pixelmeetup - Flaticon}
+\newline
+\href{https://www.flaticon.com/free-icons/warning}{Warning icons created by Freepik - Flaticon}
+\newline
+\href{https://www.flaticon.com/free-icons/safe}{Safe icons created by Assia Benkerroum  - Flaticon}
+\newline
+\href{https://www.flaticon.com/free-icons/idea}{Idea icons created by Good Ware - Flaticon}
+\newline
+\href{https://www.flaticon.com/free-icons/technology}{Technology icons created by Smashicons - Flaticon}
+\newline
+\href{https://www.flaticon.com/free-icons/pi}{Pi icons created by Freepik - Flaticon}
+
+
+\end{document}
