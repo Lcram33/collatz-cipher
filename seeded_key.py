@@ -1,19 +1,43 @@
 from params import UNUSED_CHARS, DEFAULT_CHARSET
-from secure_pwd_gen_api import new_passphrase, load_wordlist
+from secure_pwd_gen_api import new_password
 from collatzcipher import format_key
 import random
 import hashlib
 
-def print_fewer_lines(str_input):
-    lines = str_input.split('\n')
-    if len(lines) > 7:
-        splitted = lines[:3] + [f"[skipped {len(lines)-6} lines]"] + lines[-3:]
-        print('\n'.join(splitted))
-    else:
-        print(str_input)
+
+HASHING_ITERATIONS = 512000
+
 
 def sha256_string(my_string):
     return hashlib.sha256(my_string.encode('utf-8')).hexdigest()
+
+def sha512_string(my_string):
+    return hashlib.sha512(my_string.encode('utf-8')).hexdigest()
+
+def hash_password(my_string): # using general function so that it can be easly changed when the algorithm becomes obsolote
+    return sha512_string(my_string)
+
+def hash_fingerprint(my_string):
+    return sha256_string(my_string)
+
+
+def gen_salt():
+    return new_password(32, DEFAULT_CHARSET) # 256 bits salt
+
+def hash_and_salt(password, salt):
+    # salting and mixing
+    if len(password) > 4:
+        password = password[0] + salt[0] + password[1:3] + salt[1] + password[3:] + salt[2:]
+    else:
+        password += salt
+
+    hashed = hash_password(password)
+    
+    # avoiding bruteforce
+    for i in range(HASHING_ITERATIONS):
+        hashed = hash_password(f"{hashed}{i}")
+
+    return hashed
 
 def pseudo_random_shuffle(str_input: str):
     l = len(str_input)
@@ -39,7 +63,7 @@ def pseudo_random_make_charset_and_null_chars(charset, unused_chars):
 
     return pseudo_random_shuffle(charset), split_char, null_chars
 
-def gen_key_with_seed(nbytes = 500):
+def gen_key_with_seed(nbytes):
     charset, split_char, null_chars = pseudo_random_make_charset_and_null_chars(DEFAULT_CHARSET, UNUSED_CHARS)
     key_obj = {
         'charset': charset,
@@ -51,39 +75,38 @@ def gen_key_with_seed(nbytes = 500):
     return key_obj
 
 
-def print_passphrase_and_generate(nbytes, seedphrase):
-    wordlist = load_wordlist('wordlist.json')
+def generate_seeded_key(password, salt = '', nbytes = 500):
+    if salt == '':
+        salt = gen_salt()
+        
+    secured_seed = hash_and_salt(password, salt)
 
-    number_of_words = 12
-    sep = ' '
-    phrase_seed = seedphrase if seedphrase != '' else new_passphrase(wordlist, number_of_words, sep)
+    random.seed(secured_seed)
 
-    if seedphrase == '':
-        print("Your seed phrase is the following, please DO take note of it, DON'T share it with anyone unless you want them to have your key :")
-        print(phrase_seed)
-
-    random.seed(phrase_seed)
     key = gen_key_with_seed(nbytes)
-    str_key = format_key(key)
-    print("Here is the fingerprint (sha256) of you key : " + sha256_string(str_key))
+    
+    key_fingerprint = hash_fingerprint(format_key(key))
 
-    return str_key
+    return {
+        "key": key,
+        "salt": salt,
+        "fingerprint": key_fingerprint
+    }
 
-def test_seeded_key():
-    wordlist = load_wordlist('wordlist.json')
+def regen_key_with_seed(password, salt, nbytes, fingerprint):
+    secured_seed = hash_and_salt(password, salt)
 
-    number_of_words = 12
-    sep = ' '
-    phrase_seed = "atonable decent visiting daringly backyard aloft backrest connected reseller gratitude detail direness" #for testing, uncomment next line to generate one
-    #phrase_seed = new_passphrase(wordlist, number_of_words, sep)
+    random.seed(secured_seed)
 
-    print("Your seed phrase is the following, please DO take note of it, DON'T share it with anyone unless you want them to have your key :")
-    print(phrase_seed)
+    key = gen_key_with_seed(nbytes)
+    
+    gen_fingerprint = hash_fingerprint(format_key(key))
 
-    random.seed(phrase_seed)
+    return gen_key_with_seed(nbytes) if gen_fingerprint == fingerprint else False
 
-    key = gen_key_with_seed()
-    str_key = format_key(key)
-    print_fewer_lines(str_key)
+def generate_seedphrase_key(seedphrase, nbytes = 500):
+    assert len(seedphrase) > 10, "Seedphrase is too short. Create a stronger one !"
 
-    print("Here is the fingerprint (sha256) of you key : " + sha256_string(str_key)) #with the example provided, should be 9a316fa17e8b8734fe9c27cf2031fde784e6fad9e837270761ae4b505a75bff8
+    salt, password = seedphrase[:5], seedphrase[5:]
+
+    return generate_seeded_key(password, salt, nbytes)

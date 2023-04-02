@@ -1,6 +1,6 @@
 # Those paramaters was used to generate the key for the challenge.
 # Use this one and NOT params.py (was updated since !!)
-# No other changed have been made so far.
+# No other changes have been made so far.
 # To be sure, you can rely on this commit (first one with the challenge) : https://github.com/Lcram33/collatz-cipher/commit/3d06dfa3d013d09b85a2fcd71d35c69610811db5
 
 
