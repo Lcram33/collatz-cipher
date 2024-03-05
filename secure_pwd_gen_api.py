@@ -1,8 +1,32 @@
 import secrets
-import json
+import math
 
 
-#in case the random library has to be changed
+def password_entropy(password):
+    lowercase = set("abcdefghijklmnopqrstuvwxyz")
+    uppercase = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    digits = set("0123456789")
+    special_characters = set("!@#$%^&*()-_=+[]{}|;:'\",.<>/?`~")
+
+    has_lower, has_upper, has_digit, has_special = False, False, False, False
+
+    for char in password:
+        if not has_lower and char in lowercase:
+            has_lower = True
+        elif not has_upper and char in uppercase:
+            has_upper = True
+        elif not has_digit and char in digits:
+            has_digit = True
+        elif not has_special and char in special_characters:
+            has_special = True
+        
+        if has_lower and has_upper and has_digit and has_special:
+            break
+
+    N = (26 if has_lower else 0) + (26 if has_upper else 0) + (10 if has_digit else 0) + (len(special_characters) if has_special else 0)
+
+    return len(password) * math.log2(max(N, 1))
+
 def random_range(min, max):
     new = 0
     while new < min:
@@ -10,14 +34,11 @@ def random_range(min, max):
 
     return new
 
-
 def random_int(max):
     return secrets.randbelow(max)
 
-
 def random_choice(items):
     return secrets.choice(items)
-
 
 def permutation(items):
     l = len(items)
@@ -31,44 +52,6 @@ def permutation(items):
 
     return "".join(output) if type(items) == str else output
 
-
-
-
-#passwords
-def new_password(size, chars):
-    newpass = ""
-    chars = permutation(chars)
-
-    for i in range(size):
-        newpass += random_choice(chars)
-
-    return newpass
-
-
-def new_passords(sizes, chars):
-    passwords = list()
-    for i in range(len(sizes)):
-        passwords.append(new_password(sizes[i], chars))
-
-    return passwords
-
-
-#passphrases (picking random words)
-def load_wordlist(path):
-    #making this function in case another method/file format is needed. See perf_test.py for raw import.
-    data = None
-    with open(path, 'r') as f:
-        data = json.load(f)
-    return data
-
-
 def new_passphrase(wordlist, number_of_words, separator):
     wordlist = permutation(wordlist)
     return separator.join([random_choice(wordlist) for i in range(number_of_words)])
-
-def new_passphrases(wordlist, number_of_words, separator, amount):
-    passphrases = list()
-    for i in range(amount):
-        passphrases.append(new_passphrase(wordlist, number_of_words, separator))
-
-    return passphrases

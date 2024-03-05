@@ -3,7 +3,8 @@
 from collatzcipher import *
 from seeded_key import *
 from math import log
-from secure_pwd_gen_api import new_passphrase, load_wordlist
+from wordlist import wl_bip39
+from secure_pwd_gen_api import new_passphrase
 
 
 def print_fewer_lines(str_input):
@@ -15,9 +16,9 @@ def print_fewer_lines(str_input):
         print(str_input)
 
 def test_seeded_key():
-    wordlist = load_wordlist('wordlist.json')
+    wordlist = wl_bip39
 
-    number_of_words = 12
+    number_of_words = 12 # around 132 bits of entropy, 24 is safer, but here is for testing purpose
     sep = ' '
     phrase_seed = "atonable decent visiting daringly backyard aloft backrest connected reseller gratitude detail direness" #for testing, uncomment next line to generate one
     #phrase_seed = new_passphrase(wordlist, number_of_words, sep)
@@ -36,7 +37,7 @@ def test_seeded_key():
     print_fewer_lines(str_key)
 
     # with the provided passphrase, should be :
-    supposed_fgp = "52560d7d7d9324b26e00e2e266c0b72d2f7362da1350ead3df97ba0f4db07125"
+    supposed_fgp = "e0dc2b155a6f271a590a9692a0e66a4d4015ca1757863ccdf49338faed7bf1e0"
     print(f"Here is the fingerprint (sha256) of you key : {fgp}. Re-checking : {fgp == hash_fingerprint(str_key) and fgp == supposed_fgp}")
 
 
@@ -46,13 +47,13 @@ def fact(n):
 nbytes = 100 #WARNING : testing only for readability of the key (you should set a higher value ! Looks decent in terms of speed until ~1000 on a modern computer.)
 
 number_of_hex_keys = int(nbytes * 2 * 'f', 16) - int('1' + (nbytes * 2 - 1) * '0', 16)
-number_of_unused_chars_spliting_possibilities = 2 ** (len(UNUSED_CHARS) - 2) - 1 #we don't count the split char.
+number_of_unused_chars_spliting_possibilities = 2 ** (len(UNUSED_CHARS) - 2) - 1 #we do not count the split char.
 charset_shuffle_possibilities = fact(max_shift)
 number_of_possible_keys = charset_shuffle_possibilities * number_of_hex_keys * number_of_unused_chars_spliting_possibilities
 
 number_of_alphabets = len(collatz_sequence(int('1' + (nbytes * 2 - 1) * '0', 16)))
 
-number_of_messages = 2 * sum(len(DEFAULT_CHARSET) ** k for k in range(MAX_NOISE_LENGHT))
+number_of_messages_per_block = sum(len(DEFAULT_CHARSET) ** k for k in range(MAX_NOISE_LENGHT))
 
 
 calculus = f"""
@@ -60,7 +61,7 @@ A bit of math !
 
 The number of possible keys ({nbytes} bits for the token_hex and the current charset & unused chars) should be around (feel free to correct if you spot an error) :
 10^{round(log(number_of_possible_keys, 10))}, an equivalent of {round(log(number_of_possible_keys, 2))} bits.
-I estimate that there are 10^{round(log(number_of_messages, 10))} encrypted messages with the same message and key.
+I estimate that there are 10^{round(log(2 * number_of_messages_per_block, 10))} (for a one message block, plus 10^{round(log(number_of_messages_per_block, 10))} per extra block) encrypted messages with the same message and key.
 Also, there should be {number_of_alphabets} alphabets (this is a polyalphabetic cipher).
 See readme for more details.
 """

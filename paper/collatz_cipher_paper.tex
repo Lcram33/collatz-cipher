@@ -15,7 +15,7 @@
 
 \begin{document}
 
-\title{\huge{Collatz Cipher (unofficial) paper}}
+\title{\huge{Collatz Cipher paper}}
 
 \author{Marc Lecointre}
 
@@ -36,23 +36,25 @@
 I do not provide any warranty that this cipher is in any way reliable.
 DO NOT USE WITH CRITICAL DATA !
 \newline
-This is document is not an official research paper, but rather a technical documentation (easier in \LaTeX !). You are welcome to 
-contribute in any way !
+This is document is not an official research paper but rather a technical documentation. You are welcome to contribute in any way !
 
 \begin{figure}[H]
     \centering
     \includegraphics[scale=0.18]{bulb}
 \end{figure}
 
-Work in progress. Stay tuned ! (check the date of the document to see if you are up-to-date). Please open an issue or contact me directly, 
-should you have any suggestion.
+Stay tuned, new features may be added through time ! (check the date of the document to see if you are up-to-date). Please open an issue or contact me directly,
+should you have any suggestion or bug/security issue/feature to submit.
+
+Made with \LaTeX.
 
 \newblock
 
 
 \begin{abstract}
-A polyalphabetic cipher that derivate a key from Hasse's algorithm. Noise and randomness were added for more fun. Works only on text. 
-However, any file can de encrypted by converting binary stream to base64 text. This increases the size of the encrypted file.
+    A polyalphabetic cipher that derivate a key from Hasse's algorithm. Noise and randomness is added to make cryptanalysis more difficult.
+    Works only on text. However, any file can be encrypted by converting binary stream to base64 text. This, however, drastically increases the
+    size of the encrypted file.
 \end{abstract}
 
 \newpage
@@ -62,8 +64,8 @@ However, any file can de encrypted by converting binary stream to base64 text. T
 
 \include{introduction}
 \include{howitworks}
-\include{security}
 \include{math}
+\include{security}
 
 
 \section{Bibliography}

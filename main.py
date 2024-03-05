@@ -4,28 +4,43 @@ import typer
 import os
 import json
 import getpass
+import zlib
 from datetime import datetime
-from secure_pwd_gen_api import load_wordlist, new_passphrase
+
+from secure_pwd_gen_api import new_passphrase, password_entropy
+from wordlist import wl_bip39
 from collatzcipher import *
+import collatzcipherv2
 from seeded_key import *
 from params import *
+from hashing import sha256_file, sha256_string
 
 
 PATH = os.path.expanduser('~') + "/.collciph/"
+integrity_algs_string = {
+    "sha256": sha256_string
+}
+integrity_algs_file = {
+    "sha256": sha256_file
+}
 
 
-def file_bytes_to_bas64(path):
+def file_bytes_to_compressed_base64(path):
     with open(path, 'rb') as f:
-        b64_string = base64.b64encode(f.read())
+        compressed_data = zlib.compress(f.read(), level=9)
 
-    return b64_string.decode('utf8')
+    b64_string = base64.b64encode(compressed_data).decode('utf-8')
+    
+    return b64_string
 
-def base64_to_file(path, b64_string):
-    b64_bytes = b64_string.encode('utf8')
-    bytes_to_write = base64.b64decode(b64_bytes)
+def compressed_base64_to_file(path, compressed_b64_string):
+    b64_bytes = compressed_b64_string.encode('utf-8')
+    compressed_data = base64.b64decode(b64_bytes)
+
+    decompressed_data = zlib.decompress(compressed_data)
 
     with open(path, 'wb') as f:
-        f.write(bytes_to_write)    
+        f.write(decompressed_data)
 
 def print_key_data(path):
     try:
@@ -42,7 +57,7 @@ uid         {"[unknown]" if data["name"] == '' else data["name"]}
 {'' if data["desc"] == '' else f'desc         {data["desc"]}'}
     """)
 
-def load_key(fgp):
+def load_key(fgp, v2: bool = False):
     path = PATH + fgp + ".key"
     
     if not os.path.exists(path):
@@ -58,11 +73,12 @@ def load_key(fgp):
 
     if "salt" in data:
         password = getpass.getpass(prompt="Password : ")
-        result = regen_key_with_seed(password, data["salt"], data["nbytes"], data["fingerprint"])
-        if not result:
+        result = generate_seeded_key(password, data["salt"], data["nbytes"], v2)
+
+        if result["fingerprint"] != data["fingerprint"]:
             print("Wrong password.")
         else:
-            return result
+            return result["key"]
     else:
         return data["key"]
     
@@ -75,16 +91,25 @@ app = typer.Typer()
 def gen(nbytes: int = 500, name: str = '', desc: str = '', password: bool = False):
     if password:
         password = getpass.getpass(prompt="Password : ")
+        if password_entropy(password) < 100:
+            if input("Password is weak. Continue ? (y/n) ") != 'y':
+                return
+
+        password_confirm = getpass.getpass(prompt="Confirm password : ")
+        if password != password_confirm:
+            print("Passwords don't match.")
+            return
+
         result = generate_seeded_key(password, nbytes=nbytes)
+        fgp = result["fingerprint"]
         data = {
             "name": name,
             "desc": desc,
             "date": datetime.now().strftime("%Y-%m-%d"),
             "salt": result["salt"],
             "nbytes": nbytes,
-            "fingerprint": result["fingerprint"]
+            "fingerprint": fgp
         }
-        fgp = result["fingerprint"]
     else:
         key = gen_key(nbytes)
         fgp = hash_fingerprint(format_key(key))
@@ -118,14 +143,21 @@ def seededkey(nbytes: int = 500, name: str = '', desc: str = '', input: bool = F
         seedphrase = getpass.getpass("Seedphrase : ")
 
     if seedphrase == '':
-        wordlist = load_wordlist('wordlist.json')
-
-        number_of_words = 12
+        number_of_words = 24
         sep = ' '
-        seedphrase = new_passphrase(wordlist, number_of_words, sep)
+        seedphrase = new_passphrase(wl_bip39, number_of_words, sep)
     
         print("Seed phrase :")
         print(seedphrase)
+    else:
+        if password_entropy(seedphrase) < 100:
+            if input("Seedphrase is weak. Continue ? (y/n) ") != 'y':
+                return
+        
+        seedphrase_confirm = getpass.getpass("Confirm seedphrase : ")
+        if seedphrase != seedphrase_confirm:
+            print("Seedphrases do not match.")
+            return
 
     res = generate_seedphrase_key(seedphrase, nbytes)
     fgp = res["fingerprint"]
@@ -151,29 +183,122 @@ def seededkey(nbytes: int = 500, name: str = '', desc: str = '', input: bool = F
     except Exception as e:
         print(f"Error while writing file : {e}")
 
+@app.command(help="Encrypts the input stream with the provided key.")
+def enc(key: str, armor: bool = False, v2: bool = False):
+    key = load_key(key, v2)
+    if not key:
+        print("Unable to load key. Exiting.")
+        return
+    
+    print("Enter/Paste your content. Ctrl-D or Ctrl-Z ( windows ) to save it (on an empty line !).")
+    contents = []
+    while True:
+        try:
+            line = input()
+        except EOFError:
+            break
+        contents.append(line)
+    str_data = '\n'.join(contents)
+
+    if str_data == '':
+        print("No data to encrypt.")
+        return
+
+    new_data = {}
+    new_data["data"] = str_data
+    new_data["hash"] = sha256_string(str_data)
+    new_data["algorithm"] = "sha256"
+    str_data = json.dumps(new_data)
+
+    if v2:
+        enciphered = collatzcipherv2.encrypt_str(str_data, key, armor)
+    else:
+        enciphered = encrypt_str(str_data, key, armor)
+
+    print()
+    print("Here is the encrypted message :")
+
+    if armor: print(enciphered)
+    else:
+        print(os.get_terminal_size()[0] * '-')
+        print(enciphered)
+        print(os.get_terminal_size()[0] * '-')
+
+@app.command(help="Decrypts the input stream with the provided key.")
+def dec(key: str, armor: bool = False, v2: bool = False):
+    key = load_key(key, v2)
+    if not key:
+        print("Unable to load key. Exiting.")
+        return
+    
+    print("Enter/Paste your content. Ctrl-D or Ctrl-Z ( windows ) to save it.")
+    contents = []
+    while True:
+        try:
+            line = input()
+        except EOFError:
+            break
+        contents.append(line)
+    str_data = '\n'.join(contents)
+
+    if str_data == '':
+        print("No data to decrypt.")
+        return
+
+    armor = "BEGIN COLLATTZCIPHER MESSAGE" in str_data
+    if v2:
+        deciphered = collatzcipherv2.decrypt_str(str_data, key, armor)
+    else:
+        deciphered = decrypt_str(str_data, key, armor)
+
+    print()
+    try:
+        json_data = json.loads(deciphered)
+        if "algorithm" in json_data and "hash" in json_data:
+            if json_data["algorithm"] in integrity_algs_string:
+                integrity_alg = integrity_algs_string[json_data["algorithm"]]
+                if json_data["hash"] == integrity_alg(json_data["data"]):
+                    print("-- Data integrity check passed --")
+                else:
+                    print("-- Warning : Data integrity check failed ! The data might have been corrupted --")
+
+            deciphered = json_data["data"]
+    except Exception:
+        pass
+
+    print("Here is the decrypted message :")
+    print(os.get_terminal_size()[0] * '-')
+    print(deciphered)
+    print(os.get_terminal_size()[0] * '-')
+
 @app.command(help="Encrypts the file with the provided key.")
-def enc(key: str, infile: str, encname: bool = False, armor: bool = False):
-    key = load_key(key)
+def encf(key: str, infile: str, encname: bool = False, armor: bool = False, v2: bool = False):
+    key = load_key(key, v2)
     if not key:
         print("Unable to load key. Exiting.")
         return
     
     try:
-        str_data = file_bytes_to_bas64(infile)
+        str_data = file_bytes_to_compressed_base64(infile)
     except Exception as e:
         print(f"Error while loading input file : {e}")
         return
 
+    new_data = {}
+    new_data["data"] = str_data
+    new_data["hash"] = sha256_file(infile)
+    new_data["algorithm"] = "sha256"
     if encname:
         outfile = gen_noise(LATIN_LETTERS + DIGITS, '!')[:15] + '.czcenc'
-        str_data = json.dumps({
-            "filename": infile,
-            "data": str_data
-        })
+        new_data["filename"] = infile
     else:
         outfile = infile + '.czcenc'
+    str_data = json.dumps(new_data)
 
-    enciphered = encrypt_str(str_data, key, armor)
+    if v2:
+        enciphered = collatzcipherv2.encrypt_str(str_data, key, armor)
+    else:
+        enciphered = encrypt_str(str_data, key, armor)
 
     try:
         with open(outfile, 'w') as f:
@@ -182,8 +307,8 @@ def enc(key: str, infile: str, encname: bool = False, armor: bool = False):
         print(f"Error while writing data : {e}")
 
 @app.command(help="Decrypts the file with the provided key.")
-def dec(key: str, infile: str, armor: bool = False):
-    key = load_key(key)
+def decf(key: str, infile: str, v2: bool = False):
+    key = load_key(key, v2)
     if not key:
         print("Unable to load key. Exiting.")
         return
@@ -195,21 +320,38 @@ def dec(key: str, infile: str, armor: bool = False):
         print(f"Error while loading input file : {e}")
         return
 
-    deciphered = decrypt_str(str_data, key, armor)
+    armor = "BEGIN COLLATTZCIPHER MESSAGE" in str_data
+    if v2:
+        deciphered = collatzcipherv2.decrypt_str(str_data, key, armor)
+    else:
+        deciphered = decrypt_str(str_data, key, armor)
 
+    outfile = infile.removesuffix(".czcenc")
+    hash = None
+    algorithm = None
     try:
         json_data = json.loads(deciphered)
-        outfile, deciphered = json_data["filename"], json_data["data"]
+        deciphered = json_data["data"]
+        algorithm = json_data["algorithm"]
+        hash = json_data["hash"]
+        outfile = json_data["filename"]
     except Exception:
-        outfile = infile.removesuffix(".czcenc")
+        pass
 
     try:
-        base64_to_file(outfile, deciphered)        
+        compressed_base64_to_file(outfile, deciphered)        
     except Exception as e:
         print(f"Error while writing data : {e}")
+    
+    if algorithm in integrity_algs_file:
+        integrity_alg = integrity_algs_file[algorithm]
+        if hash == integrity_alg(outfile):
+            print("-- Data integrity check passed --")
+        else:
+            print("-- Warning : Data integrity check failed ! The data might have been corrupted --")
 
-@app.command(help="Print all keys properties.")
-def list():
+@app.command(name="list", help="Print all keys properties.")
+def _list():
     if not os.path.exists(PATH):
         os.mkdir(PATH)
 
@@ -219,14 +361,14 @@ def list():
         print_key_data(os.path.join(PATH,file))
 
 @app.command(help="Print the key formatted to base64 so you can share it with someone. Not recommended, it is better to send a salt key file, or share a seed !")
-def export(key: str):
+def export(key: str, v2: bool = False):
     print("WARNING")
     print("The key will be exported IN CLEAR. Which means that anyone getting access to it will be able to decyrpt any message encrypted with it !")
     print(f"If you created the key with a password, you can safely share the file of the key : {PATH + key + '.key'}")
 
     if input("Do you want to export the key ? (it will be printed in the terminal) (y/n) : ") != 'y': return
 
-    key = load_key(key)
+    key = load_key(key, v2)
     if not key:
         print("Unable to load key. Exiting.")
         return
@@ -287,6 +429,12 @@ def delete(key: str):
         os.remove(path)
     except Exception as e:
         print("Cannot delete key : " + str(e))
+
+@app.command(help="Checks if the key can be loaded. Useful to check if you remember your password.")
+def check(key: str, v2: bool = False):
+    key = load_key(key, v2)
+    if key:
+        print("Key loaded successfully !")
 
 
 if __name__ == "__main__":

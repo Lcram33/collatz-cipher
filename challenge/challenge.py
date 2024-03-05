@@ -9,7 +9,7 @@ Hint :
 """
 
 from solution import STR_KEY, MESSAGE
-from collatzcipher import *
+from collatzcipherv1 import *
 
 # I generated the key and put it in solution.py
 #key = gen_key(100)

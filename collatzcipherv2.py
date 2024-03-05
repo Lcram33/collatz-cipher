@@ -1,23 +1,19 @@
 import secrets
 import json
 import base64
-import sys
-from datetime import datetime, timedelta
 
 from params import DEFAULT_CHARSET, UNUSED_CHARS
 
 
-MAX_NOISE_LENGHT = 20
-MAX_CONFUSING_THRESHOLD = 45
-BLOCK_SIZE = 4096 # number of chars in one block
+MAX_NOISE_LENGHT = 200
+confusing_threshold = 40 # in x % of the cases. Changes at each message.
 
-confusing_threshold = MAX_CONFUSING_THRESHOLD # in x % of the cases. Changes at each message.
 max_shift = len(DEFAULT_CHARSET)
-
 
 def set_max_shift(new):
     global max_shift
     max_shift = new
+
 
 def my_base64_encoder(str_input):
     return base64.b64encode(bytes(str_input, 'utf-8')).decode('utf-8')
@@ -130,8 +126,7 @@ def modified_collatz_sequence(int_key, size):
 
 def remove_null_chars(ciphertext, null_chars):
     for char in null_chars:
-        if char in ciphertext:
-            ciphertext = ciphertext.replace(char, '')
+        ciphertext = ciphertext.replace(char, '')
     
     return ciphertext
 
@@ -165,54 +160,24 @@ def randomly_confuse_the_cryptanalyst(null_chars):
     else:
         return ''
 
-def animated_percent_bar(percent):
-    BAR_CHAR = '■'
-    EMPTY_BAR_CHAR = '□'
-    filled_squares = round(percent / 2)
-    
-    bar = '[' + filled_squares * BAR_CHAR + (50 - filled_squares) * EMPTY_BAR_CHAR + f"] {percent}%\t"
-    sys.stdout.write('\r' + bar)
-    sys.stdout.flush()
-
 def encrypt_str(plaintext, key_object, armor = True):
-    # Time delta calculus
-    start = datetime.now()
-
     global confusing_threshold
-    confusing_threshold = random_between(1, MAX_CONFUSING_THRESHOLD)
+    confusing_threshold = random_between(1, 100)
 
     set_max_shift(len(key_object['charset']))
 
-    # spliting message in blocks
-    msg_blocks = [gen_noise(key_object['charset'], key_object['split_char']) + key_object['split_char'] + plaintext[i:i+BLOCK_SIZE].replace(key_object['split_char'], '') + key_object['split_char'] for i in range(0, len(plaintext), BLOCK_SIZE)] + [gen_noise(key_object['charset'], key_object['split_char'])]
-    
-    #print(f"[DEBUG] Number of blocks for this file : {len(msg_blocks)}")
-
-    plaintext = ''.join(msg_blocks)
-    plaintext_len = len(plaintext)
-
-    keys = modified_collatz_sequence(int(key_object['key'], 16), plaintext_len)
+    plaintext = gen_noise(key_object['charset'], key_object['split_char']) + key_object['split_char'] + plaintext.replace(key_object['split_char'], '') + key_object['split_char'] + gen_noise(key_object['charset'], key_object['split_char'])
+    keys = modified_collatz_sequence(int(key_object['key'], 16), len(plaintext))
     unformated_ciphertext = ""
 
-    last_percent = 0
-    for i in range(plaintext_len):
-        if datetime.now() - start > timedelta(seconds=2):
-            percent_done = round(100 * i / plaintext_len)
-            if last_percent != percent_done:
-                animated_percent_bar(percent_done)
-                last_percent = percent_done
-
+    for i in range(len(plaintext)):
         unformated_ciphertext += (encode(plaintext[i], key_object['charset'], keys[i], key_object['split_char']) + randomly_confuse_the_cryptanalyst(key_object['null_chars']))
-    print()
-    
+
     return format_message(unformated_ciphertext) if armor else unformated_ciphertext
 
 def decrypt_str(ciphertext, key_object, armor = True):
-    # Time delta calculus
-    start = datetime.now()
-
     set_max_shift(len(key_object['charset']))
-
+    
     if armor:
         ciphertext = unformat_message(ciphertext)
 
@@ -220,22 +185,11 @@ def decrypt_str(ciphertext, key_object, armor = True):
     keys = modified_collatz_sequence(int(key_object['key'], 16), len(ciphertext))
     plaintext = ""
 
-    ciphertext_len = len(ciphertext)
-
-    last_percent = 0
-    for i in range(ciphertext_len):
-        if datetime.now() - start > timedelta(seconds=1):
-            percent_done = round(100 * i / ciphertext_len)
-            if last_percent != percent_done:
-                animated_percent_bar(percent_done)
-                last_percent = percent_done
-
+    for i in range(len(ciphertext)):
         plaintext += decode(ciphertext[i], key_object['charset'], keys[i], key_object['split_char'])
-    print()
 
     try:
-        fragments = plaintext.split(key_object['split_char'])
-        return ''.join(fragments[i] for i in range(len(fragments)) if i % 2 != 0)
+        return plaintext.split(key_object['split_char'])[1]
     except Exception:
         print("SPLIT ERROR")
         return plaintext

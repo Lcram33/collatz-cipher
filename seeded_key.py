@@ -1,43 +1,10 @@
 from params import UNUSED_CHARS, DEFAULT_CHARSET
-from secure_pwd_gen_api import new_password
 from collatzcipher import format_key
+from hashing import *
+
+import base64
 import random
-import hashlib
 
-
-HASHING_ITERATIONS = 600000
-
-
-def sha256_string(my_string):
-    return hashlib.sha256(my_string.encode('utf-8')).hexdigest()
-
-def sha512_string(my_string):
-    return hashlib.sha512(my_string.encode('utf-8')).hexdigest()
-
-def hash_password(my_string): # using general function so that it can be easly changed when the algorithm becomes obsolote
-    return sha512_string(my_string)
-
-def hash_fingerprint(my_string):
-    return sha256_string(my_string)
-
-
-def gen_salt():
-    return new_password(32, DEFAULT_CHARSET) # 256 bits salt
-
-def hash_and_salt(password, salt):
-    # salting and mixing
-    if len(password) > 4:
-        password = password[0] + salt[0] + password[1:3] + salt[1] + password[3:] + salt[2:]
-    else:
-        password += salt
-
-    hashed = hash_password(password)
-    
-    # avoiding bruteforce
-    for i in range(HASHING_ITERATIONS):
-        hashed = hash_password(f"{hashed}{i}")
-
-    return hashed
 
 def pseudo_random_shuffle(str_input: str):
     l = len(str_input)
@@ -76,11 +43,14 @@ def gen_key_with_seed(nbytes):
     return key_obj
 
 
-def generate_seeded_key(password, salt = '', nbytes = 500):
+def generate_seeded_key(password, salt = '', nbytes = 500, legacy = False):
     if salt == '':
         salt = gen_salt()
-        
-    secured_seed = hash_and_salt(password, salt)
+    
+    if legacy:
+        secured_seed = hash_password_legacy(password, salt)
+    else:
+        secured_seed = hash_password(password, salt)
 
     random.seed(secured_seed)
 
@@ -94,20 +64,9 @@ def generate_seeded_key(password, salt = '', nbytes = 500):
         "fingerprint": key_fingerprint
     }
 
-def regen_key_with_seed(password, salt, nbytes, fingerprint):
-    secured_seed = hash_and_salt(password, salt)
-
-    random.seed(secured_seed)
-
-    key = gen_key_with_seed(nbytes)
-    
-    gen_fingerprint = hash_fingerprint(format_key(key))
-
-    return gen_key_with_seed(nbytes) if gen_fingerprint == fingerprint else False
-
 def generate_seedphrase_key(seedphrase, nbytes = 500):
     assert len(seedphrase) > 10, "Seedphrase is too short. Create a stronger one !"
 
     salt, password = seedphrase[:5], seedphrase[5:]
 
-    return generate_seeded_key(password, salt, nbytes)
+    return generate_seeded_key(password, salt, nbytes, legacy=True)

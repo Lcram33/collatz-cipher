@@ -45,19 +45,20 @@ is valid.
 
 \subsection{Message encryption}
 \begin{itemize}
-    \item Noise is added to the begining and the end of the message, using the spliting char as a separator. This is to make each 
-          encryption of the message unique (see the section below) and cryptanalysis difficult/confusing.
+    \item The message is splited in blocks (of 4096 chars by default). 
+    \item Noise is added to the begining and the end of the message as well as between all the blocks, using the spliting char as a separator. 
+          This is to make each encryption of the message unique (see the section below) and cryptanalysis difficult/confusing.
     \item Hasse's algorithm is applied to generate a sequence (as long as the message) of numbers modulus the size of the charset. If 
           the sequence is too short (compared to the message size), it is repeated.
-    \item Each character $i$ is swapped with the character $i + key[i]$ modulus the size of the charset. Plus, there are 40\% of chance 
-          that a null char would be added at each character encoding.
+    \item Each character $i$ is swapped with the character $i + key[i]$ modulus the size of the charset. Plus, there are between 1 and 45\% 
+          of chance that a null char would be added at each character encoding. (this percentage is "decided" at each message encryption)
     \item Optionally, the enciphered message can be encoded in base64 (so that the message can be transmitted via channels that does not 
-          support UTF8).
+          support UTF-8).
 \end{itemize}
 
 \subsection{Message decryption}
 \begin{itemize}
     \item Null chars are removed.
     \item Each character $i$ is swapped with the character $i - key[i]$ (+ the size of the charset, if the result is negative).
-    \item The noise is removed using the split char.
+    \item The noise is removed using the split char. (by ignoring odd blocks)
 \end{itemize}

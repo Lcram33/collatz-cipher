@@ -1,26 +1,37 @@
 #!/bin/bash
 
-key=DE5F047A3503634E1CF0A515115E788B1023C4A53C9EEAC267A586E444F8A3E6 # generate a key and put its fingerprint here
+# Change this with the ID of a key that you generated.
+key=127AFACCAB6D493DFD2EF636665EA437931B603E583FEEB305A01C05AF66835A
 
 echo Encrypting everything...
 
-../main.py enc $key abitoftext.txt --armor
-../main.py enc $key m9sYK.jpg
-../main.py enc $key bitcoin.pdf
+../main.py encf $key abitoftext.txt
+../main.py encf $key m9sYK.jpg --armor
+../main.py encf $key bitcoin.pdf
+
+echo
 ls -lh
 
+echo
+echo Lines :
+wc -l *
+
+echo
+echo Chars :
+wc -m *
+
+echo
 echo Decrypting everything...
 
-mv abitoftext.txt abitoftext.txt.old
-mv m9sYK.jpg m9sYK.jpg.old
-mv bitcoin.pdf bitcoin.pdf.old
+rm abitoftext.txt m9sYK.jpg bitcoin.pdf
 
-../main.py dec $key abitoftext.txt.czcenc --armor
-../main.py dec $key m9sYK.jpg.czcenc
-../main.py dec $key bitcoin.pdf.czcenc
+../main.py decf $key abitoftext.txt.czcenc
+../main.py decf $key m9sYK.jpg.czcenc
+../main.py decf $key bitcoin.pdf.czcenc
 
+echo
 echo Check sums :
 
 md5sum --check MD5SUMS
 
-rm *.old *.czcenc
+rm *.czcenc
